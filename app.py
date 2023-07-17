@@ -25,13 +25,13 @@ else:
         sections_display = st.dataframe(sections_df)
         sections_download = st.download_button(
             label="Download",
-            data=sections_df.to_csv(),
+            data=sanitize_dataframe_for_download(sections_df).to_csv(),
             file_name=f"{doc.name}_sections.csv",
         )
         st.header("References")
         references_display = st.dataframe(references_df)
         references_download = st.download_button(
             label="Download",
-            data=references_df.to_csv(),
+            data=sanitize_dataframe_for_download(references_df).to_csv(),
             file_name=f"{doc.name}_references.csv",
         )

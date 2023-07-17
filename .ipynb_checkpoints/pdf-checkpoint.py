@@ -226,13 +226,3 @@ def convert_pdf_to_dataframes(path):
     sections, sections_df = make_sections_dataframe(path)
     references_df = make_references_dataframe(sections, sections_df)
     return sections_df, references_df
-
-
-def sanitize_dataframe_for_download(df):
-    for col in df.columns:
-        if df[col].dtype == "object":
-            try:
-                df[col] = df[col].str.replace("\n", " ").str.replace('"', "'")
-            except AttributeError:
-                continue
-    return df
