@@ -1,20 +1,18 @@
-import pprint
 import fitz
-from fitz import Rect
 import re
 import pandas as pd
 from section import Section
 
 
+### DIFF
 def get_sections(doc):
     main_section = Section("", 100)
-    main_section
 
     prev_size = 100
     curr_section = main_section
 
     for page in doc:
-        rect = Rect(
+        rect = fitz.Rect(
             page.rect.x0 + 40, page.rect.y0 + 60, page.rect.x1 - 40, page.rect.y1 - 40
         )
 
@@ -64,6 +62,7 @@ def get_sections(doc):
     return main_section.children[-1].children[-1].children
 
 
+### DIFF
 def preprocess_sections(sections):
     add_new_section = False
 
@@ -106,6 +105,7 @@ def preprocess_sections(sections):
     return sections
 
 
+### SAME
 def make_sections_dataframe(doc):
     # Get sections
     sections = get_sections(doc)
@@ -117,31 +117,27 @@ def make_sections_dataframe(doc):
         content_nest[section.content] = [section.print_contents()]
 
     sections_df = pd.DataFrame(content_nest, index=["text"]).T
+
+    # Add keywords to sections
+    abstract_text = sections_df.iloc[0].item()
+    abstract, keywords = abstract_text.split("Keywords")
+    cleaned_keywords = [keyword.strip() for keyword in keywords.split("•")]
+    new_row = pd.DataFrame({"text": str(cleaned_keywords)}, index=["Keywords"])
+    sections_df = pd.concat([new_row, sections_df])
+
     sections_df.name = doc.name
     return sections, sections_df
 
 
+### DIFF
 def make_references_dataframe(sections, sections_df):
     references_dictionary = {}
-
-    references_clean = text_preprocess_for_reference_matching(
-        sections[-1].print_contents()
-    )
+    references_text = sections[-1].print_contents()
+    references_clean = text_preprocess_for_reference_matching(references_text)
 
     for location, text in zip(sections_df.index[:-1], sections_df.values[:-1]):
         in_text_citations = get_in_text_citations(text.item())
-        cleaned_in_text_citations = [
-            item
-            for group in [
-                [
-                    c.strip()  # Remove whitespace
-                    for c in citation[1:-1].split(",")  # Remove '(' and ')'
-                    if any(char.isdigit() for char in c)
-                ]  # Remove any that doesn't have digits (year)
-                for citation in in_text_citations
-            ]
-            for item in group
-        ]
+        cleaned_in_text_citations = clean_in_text_citations(in_text_citations)
         author_year_pairs = list(
             filter(
                 lambda x: x != None, map(process_citations, cleaned_in_text_citations)
@@ -158,6 +154,22 @@ def make_references_dataframe(sections, sections_df):
     return references_df
 
 
+def clean_in_text_citations(in_text_citations):
+    return [
+        item
+        for group in [
+            [
+                c.strip()  # Remove whitespace
+                for c in citation[1:-1].split(",")  # Remove '(' and ')'
+                if any(char.isdigit() for char in c)
+            ]  # Remove any that doesn't have digits (year)
+            for citation in in_text_citations
+        ]
+        for item in group
+    ]
+
+
+### DIFF
 def text_preprocess_for_reference_matching(references_text):
     # START searching ONCE References tag found
     references_dirty = re.sub("\n", " ", references_text)
@@ -170,11 +182,13 @@ def text_preprocess_for_reference_matching(references_text):
     return references_clean
 
 
+### DIFF
 def get_in_text_citations(text):
     IN_TEXT_CITATION_REGEX = r"\([\w\s.,]+\s\d{3,4}\s?\)"
     return re.findall(IN_TEXT_CITATION_REGEX, text)
 
 
+### DIFF
 def process_citations(citation: str):
     # case 1: 2 authors
     if " and " in citation:
@@ -201,6 +215,7 @@ def process_citations(citation: str):
             return ([author.strip()], year.strip())
 
 
+### DIFF
 def find_citation_matches(author_year_pairs, full_references, data, location):
     for author_year_pair in author_year_pairs:
         authors, year = author_year_pair
@@ -221,8 +236,20 @@ def find_citation_matches(author_year_pairs, full_references, data, location):
     return data
 
 
+### SAME
 def convert_pdf_to_dataframes(path):
     """Returns (sections_df, references_df)"""
     sections, sections_df = make_sections_dataframe(path)
     references_df = make_references_dataframe(sections, sections_df)
     return sections_df, references_df
+
+
+### SAME
+def sanitize_dataframe_for_download(df):
+    for col in df.columns:
+        if df[col].dtype == "object":
+            try:
+                df[col] = df[col].str.replace("\n", " ").str.replace('"', "'")
+            except AttributeError:
+                continue
+    return df

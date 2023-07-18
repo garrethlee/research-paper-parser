@@ -1,6 +1,4 @@
 class Section:
-    """A section of text from a pdf file"""
-
     def __init__(self, content, size):
         self.children = []
         self.size = size
@@ -8,6 +6,8 @@ class Section:
         self.content = content
 
     def __eq__(self, other):
+        if type(other) == str:
+            return self.content.strip() == other
         if isinstance(other, self.__class__):
             return self.content.strip() == other.content.strip()
         return False
