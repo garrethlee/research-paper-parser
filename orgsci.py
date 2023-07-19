@@ -78,7 +78,7 @@ def preprocess_sections(sections):
 
     # Fit all text that belongs in paragraph into one "Introduction" paragraph
     for idx, section in enumerate(sections_tmp):
-        if len(section.content) > 100:
+        if len(section.content) > 225:
             add_new_section = True
             if min(earliest_index, idx) != earliest_index:
                 earliest_index = idx
