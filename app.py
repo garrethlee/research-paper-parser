@@ -1,7 +1,7 @@
 import streamlit as st
 import fitz
 from config import *
-import orgsci, annurev
+import journals.orgsci as orgsci, journals.annurev as annurev, journals.aom as aom
 
 
 def set_converted_state(state):
@@ -30,9 +30,10 @@ else:
     with col1:
         pdf_file = st.file_uploader("Upload the paper's PDF")
     with col2:
-        st.text("")  # PADDING
-        st.text("")  # PADDING
-        st.text("")  # PADDING
+        st.text("")
+        st.text("")
+        st.text("")
+        # PADDING
         convert_button = st.button(
             "Convert",
             disabled=pdf_file == None,
@@ -41,20 +42,25 @@ else:
         )
     st.write("---")
     st.header("Results")
+
     if st.session_state["convert_clicked"] and pdf_file:
         pdf_file_contents = pdf_file.getvalue()
         doc = fitz.open("pdf", pdf_file_contents)
+
         try:
             if journal == ORGSCI:
                 sections_df, references_df = orgsci.convert_pdf_to_dataframes(doc)
             if journal == ANNUREV_ORGPSYCH:
                 sections_df, references_df = annurev.convert_pdf_to_dataframes(doc)
+            if journal == AOM:
+                sections_df, references_df = aom.convert_pdf_to_dataframes(doc)
             st.session_state.convert_success = True
         except Exception as e:
             st.error(
                 "Whoops! There seems to be an error. Did you make sure that the journal selected matches the file you uploaded?"
             )
             st.session_state.convert_success = False
+
         if st.session_state.convert_success:
             st.header("Sections")
             sections_display = st.dataframe(sections_df)

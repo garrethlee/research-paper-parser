@@ -93,16 +93,6 @@ def preprocess_sections(sections):
     sections = sections[abstract_index:]
 
     return sections
-    # Preprocess sections
-    abstract_section = Section("Abstract. ", 0)
-
-    abstract_index = sections.index(abstract_section)
-    abstract_text = sections.pop(abstract_index + 1)
-    sections[abstract_index].add_child(abstract_text)
-
-    sections = sections[abstract_index:]
-
-    return sections
 
 
 ### SAME
