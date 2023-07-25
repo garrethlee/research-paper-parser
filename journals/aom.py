@@ -124,6 +124,7 @@ def find_citation_matches(author_year_pairs, full_references, data, location):
 
 
 def process_citations(citation_group: str):
+    results = []
     citations = citation_group.split(";")
     for citation in citations:
         try:
@@ -134,34 +135,40 @@ def process_citations(citation_group: str):
                 names = ",".join(tokens[:-1])
                 names = names.replace("&", ",")
                 names_split = names.split(",")
-                return (
-                    [
-                        name.strip()
-                        for name in names_split
-                        if name.strip() not in ("", "e.g.")
-                    ],
-                    year.strip(),
+                results.append(
+                    (
+                        [
+                            name.strip()
+                            for name in names_split
+                            if name.strip() not in ("", "e.g.")
+                        ],
+                        year.strip(),
+                    )
                 )
 
             # case 2: et al
             if "et al." in citation:
                 citation = citation.replace("et al.", "")
                 tokens = citation.split(",")
-                return (
-                    [token.strip() for token in tokens[:-1] if token.strip() != ""],
-                    tokens[-1].strip(),
+                results.append(
+                    (
+                        [token.strip() for token in tokens[:-1] if token.strip() != ""],
+                        tokens[-1].strip(),
+                    )
                 )
 
             # case 3: 1 author
             else:
                 if "(" in citation:
                     author, year = citation.split()
-                    return ([author], year[1:-1])
+                    results.append(([author], year[1:-1]))
                 else:
                     citation_split = citation.split(",")
-                    return ([citation_split[-2]], citation_split[-1])
+                    results.append(([citation_split[-2]], citation_split[-1]))
         except:
-            return ([""], "")
+            results.append(([""], ""))
+
+    return results
 
 
 def text_preprocess_for_reference_matching(references_text):
@@ -194,12 +201,15 @@ def make_references_dataframe(text_nest, sections_df):
                 citation if citation[0] != "(" else citation[1:-1]
                 for citation in in_text_citations
             ]
-            author_year_pairs = list(
+            author_year_pairs_nested = list(
                 filter(
                     lambda x: x != None,
                     map(process_citations, cleaned_in_text_citations),
                 )
             )
+            author_year_pairs = [
+                item for group in author_year_pairs_nested for item in group
+            ]
             references_dictionary = find_citation_matches(
                 author_year_pairs, references_clean, references_dictionary, location
             )
