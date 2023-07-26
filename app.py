@@ -62,6 +62,7 @@ else:
         except Exception as e:
             st.error(
                 "Whoops! There seems to be an error. Did you make sure that the journal selected matches the file you uploaded?"
+                + f"\n Error: {e}"
             )
             st.session_state.convert_success = False
 
