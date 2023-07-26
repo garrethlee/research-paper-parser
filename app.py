@@ -2,6 +2,10 @@ import streamlit as st
 import fitz
 from config import *
 from journals import orgsci, annurev, aom, asq
+from loguru import logger
+import sys
+
+logger.add(sys.stdout, backtrace=True, diagnose=True)
 
 
 def set_converted_state(state):
@@ -64,6 +68,7 @@ else:
                 "Whoops! There seems to be an error. Did you make sure that the journal selected matches the file you uploaded?"
                 + f"\n Error: {e}"
             )
+            logger.error(f"Exception found: {e}")
             st.session_state.convert_success = False
 
         if st.session_state.convert_success:

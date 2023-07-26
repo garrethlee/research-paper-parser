@@ -1,0 +1,28 @@
+# Compiled Python files
+*.pyc
+__pycache__/
+
+# Virtual environment
+venv/
+env/
+*.env
+.env
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Streamlit cache and logs
+.streamlit/
+
+# Streamlit app settings
+*.toml
+
+# Streamlit app history
+.history/
+
+# Streamlit app generated files
+app.py
+
+# Exclude any sensitive or private configuration files (modify as needed)
+config.ini
+secrets.yaml

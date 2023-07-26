@@ -2,3 +2,4 @@ pandas==2.0.1
 PyMuPDF
 streamlit==1.14.0
 frontend
+loguru
