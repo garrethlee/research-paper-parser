@@ -4,6 +4,7 @@ from config import *
 from journals import orgsci, annurev, aom, asq
 from loguru import logger
 import sys
+import traceback
 
 logger.add(sys.stdout, backtrace=True, diagnose=True)
 
@@ -64,11 +65,13 @@ else:
                 sections_df, references_df = asq.convert_pdf_to_dataframes(doc)
             st.session_state.convert_success = True
         except Exception as e:
+            newline = "\n\n"
             st.error(
-                "Whoops! There seems to be an error. Did you make sure that the journal selected matches the file you uploaded?"
-                + f"\n Error: {e}"
+                "Whoops! There seems to be an error. Did you make sure that the journal selected matches the file you uploaded?\n\n\n"
+                + "============ \n\n\n"
+                + f"Traceback: {newline.join(traceback.format_exception(e))}"
             )
-            logger.error(f"Exception found: {e}")
+            logger.error(f"Exception found: {e.with_traceback(e.__traceback__)}")
             st.session_state.convert_success = False
 
         if st.session_state.convert_success:

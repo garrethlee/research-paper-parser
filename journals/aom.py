@@ -1,6 +1,8 @@
 import re
 import pandas as pd
 from loguru import logger
+import traceback
+import sys
 
 AOM_HEADER_SIZE = (9.96, 10.0)
 
@@ -69,7 +71,12 @@ def structure_doc_by_size_and_font(doc):
         return seqs, sorted_first_page_fonts, sorted_rest_fonts
 
     except Exception as e:
-        logger.error(f"Error occurred in 'structure_doc_by_size_and_font': {str(e)}")
+        logger.error(
+            f"Error occurred in 'structure_doc_by_size_and_font': {traceback.format_exc()}"
+        )
+        logger.error(
+            f"Error occurred in 'structure_doc_by_size_and_font': {traceback.format_exc()}"
+        )
         raise
 
 
@@ -84,16 +91,18 @@ def get_headers(fonts):
             or None if no such headers are found.
     """
     try:
-        for key, val in fonts.items():
-            font, size = key
-            if size in AOM_HEADER_SIZE:
-                return val[1:]  # Skipping the first item as it is often empty.
+        # Try first available header size, then try second
+        for header in AOM_HEADER_SIZE[-1]:
+            for key, val in fonts.items():
+                font, size = key
+                if size == header:
+                    return val[1:]  # Skipping the first item as it is often empty.
         logger.error("get_headers: Headers not found!")
         return []
 
     except Exception as e:
-        logger.error(f"Error occurred in 'get_headers': {str(e)}")
-        raise
+        logger.error(f"Error occurred in 'get_headers': {traceback.format_exc()}")
+        raise Exception(f"Error occurred in 'get_headers': {traceback.format_exc()}")
 
 
 def get_abstract(first_page_fonts):
@@ -108,16 +117,19 @@ def get_abstract(first_page_fonts):
     try:
         first_page_fonts = dict(reversed(first_page_fonts.items()))
         dict_items = first_page_fonts.items()
-        for idx, ((font, font_size), blocks) in enumerate(dict_items):
-            # Get item right before authors
-            if font_size in AOM_HEADER_SIZE:
-                return {"Abstract": list(dict_items)[idx - 1][1][0]}
+
+        # Try first header, then try second
+        for header in AOM_HEADER_SIZE:
+            for idx, ((font, font_size), blocks) in enumerate(dict_items):
+                # Get item right before authors
+                if font_size == header:
+                    return {"Abstract": list(dict_items)[idx - 1][1][0]}
 
         return first_page_fonts
 
     except Exception as e:
-        logger.error(f"Error occurred in 'get_abstract': {str(e)}")
-        raise
+        logger.error(f"Error occurred in 'get_abstract': {traceback.format_exc()}")
+        raise Exception(f"Error occurred in 'get_abstract': {traceback.format_exc()}")
 
 
 def get_text_nest(seqs, starting_text_nest, pdf_headers):
@@ -144,8 +156,8 @@ def get_text_nest(seqs, starting_text_nest, pdf_headers):
         return starting_text_nest
 
     except Exception as e:
-        logger.error(f"Error occurred in 'get_text_nest': {str(e)}")
-        raise
+        logger.error(f"Error occurred in 'get_text_nest': {traceback.format_exc()}")
+        raise Exception(f"Error occurred in 'get_text_nest': {traceback.format_exc()}")
 
 
 def get_sections(doc):
@@ -165,8 +177,8 @@ def get_sections(doc):
         return text_nest
 
     except Exception as e:
-        logger.error(f"Error occurred in 'get_sections': {str(e)}")
-        raise
+        logger.error(f"Error occurred in 'get_sections': {traceback.format_exc()}")
+        raise Exception(f"Error occurred in 'get_sections': {traceback.format_exc()}")
 
 
 def make_sections_dataframe(doc):
@@ -187,8 +199,12 @@ def make_sections_dataframe(doc):
         return text_nest, sections_df
 
     except Exception as e:
-        logger.error(f"Error occurred in 'make_sections_dataframe': {str(e)}")
-        raise
+        logger.error(
+            f"Error occurred in 'make_sections_dataframe': {traceback.format_exc()}"
+        )
+        raise Exception(
+            f"Error occurred in 'make_sections_dataframe': {traceback.format_exc()}"
+        )
 
 
 def find_citation_matches(author_year_pairs, full_references, data, location):
@@ -223,8 +239,12 @@ def find_citation_matches(author_year_pairs, full_references, data, location):
         return data
 
     except Exception as e:
-        logger.error(f"Error occurred in 'find_citation_matches': {str(e)}")
-        raise
+        logger.error(
+            f"Error occurred in 'find_citation_matches': {traceback.format_exc()}"
+        )
+        raise Exception(
+            f"Error occurred in 'find_citation_matches': {traceback.format_exc()}"
+        )
 
 
 def process_citations(citation_group: str):
@@ -292,8 +312,10 @@ def process_citations(citation_group: str):
         return results
 
     except Exception as e:
-        logger.error(f"Error occurred in 'process_citations': {str(e)}")
-        raise
+        logger.error(f"Error occurred in 'process_citations': {traceback.format_exc()}")
+        raise Exception(
+            f"Error occurred in 'process_citations': {traceback.format_exc()}"
+        )
 
 
 def text_preprocess_for_reference_matching(references_text):
@@ -326,9 +348,11 @@ def text_preprocess_for_reference_matching(references_text):
 
     except Exception as e:
         logger.error(
-            f"Error occurred in 'text_preprocess_for_reference_matching': {str(e)}"
+            f"Error occurred in 'text_preprocess_for_reference_matching': {traceback.format_exc()}"
         )
-        raise
+        raise Exception(
+            f"Error occurred in 'text_preprocess_for_reference_matching': {traceback.format_exc()}"
+        )
 
 
 def make_references_dataframe(text_nest, sections_df):
@@ -346,6 +370,12 @@ def make_references_dataframe(text_nest, sections_df):
         references_clean = text_preprocess_for_reference_matching(
             text_nest["REFERENCES"]
         )
+    except KeyError:
+        logger.info(f"REFERENCES key not found. Possible keys are: {text_nest.keys()}")
+        references_clean = text_preprocess_for_reference_matching(
+            list(text_nest.values())[-1]
+        )
+    try:
         for location, text in zip(sections_df.index, sections_df.values):
             if location != "REFERENCES":
                 in_text_citations = get_in_text_citations(text.item())
@@ -375,7 +405,7 @@ def make_references_dataframe(text_nest, sections_df):
 
     except Exception as e:
         logger.error(f"Error occurred in 'make_references_dataframe': {e}")
-        raise
+        raise Exception(f"Error occurred in 'make_references_dataframe': {e}")
 
 
 def get_in_text_citations(text):
@@ -396,8 +426,12 @@ def get_in_text_citations(text):
         return re.findall(IN_TEXT_CITATION_REGEX, text)
 
     except Exception as e:
-        logger.error(f"Error occurred in 'get_in_text_citations': {str(e)}")
-        raise
+        logger.error(
+            f"Error occurred in 'get_in_text_citations': {traceback.format_exc()}"
+        )
+        raise Exception(
+            f"Error occurred in 'get_in_text_citations': {traceback.format_exc()}"
+        )
 
 
 def convert_pdf_to_dataframes(doc):
@@ -417,5 +451,9 @@ def convert_pdf_to_dataframes(doc):
         return sections_df, references_df
 
     except Exception as e:
-        logger.error(f"Error occurred in 'convert_pdf_to_dataframes': {str(e)}")
-        raise
+        logger.error(
+            f"Error occurred in 'convert_pdf_to_dataframes': {traceback.format_exc()}"
+        )
+        raise Exception(
+            f"Error occurred in 'convert_pdf_to_dataframes': {traceback.format_exc()}"
+        )
