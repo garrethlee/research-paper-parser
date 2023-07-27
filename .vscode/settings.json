@@ -5,5 +5,7 @@
         "."
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "ecl.launchConfiguration": "not found",
+    "ecl.targetCluster": {}
 }

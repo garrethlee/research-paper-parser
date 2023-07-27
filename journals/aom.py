@@ -1,13 +1,13 @@
 import re
+import traceback
+
 import pandas as pd
 from loguru import logger
-import traceback
-import sys
 
 AOM_HEADER_SIZE = (9.96, 10.0)
 
 
-def structure_doc_by_size_and_font(doc):
+def get_pre_sections(doc):
     """Extracts text spans, fonts, and sizes from a PDF document.
 
     Args:
@@ -74,10 +74,9 @@ def structure_doc_by_size_and_font(doc):
         logger.error(
             f"Error occurred in 'structure_doc_by_size_and_font': {traceback.format_exc()}"
         )
-        logger.error(
+        raise Exception(
             f"Error occurred in 'structure_doc_by_size_and_font': {traceback.format_exc()}"
         )
-        raise
 
 
 def get_headers(fonts):
@@ -170,7 +169,7 @@ def get_sections(doc):
         dict: A dictionary containing the grouped text sequences for each section.
     """
     try:
-        seqs, first_page_fonts, rest_fonts = structure_doc_by_size_and_font(doc)
+        seqs, first_page_fonts, rest_fonts = get_pre_sections(doc)
         starting_text_nest = get_abstract(first_page_fonts)
         pdf_headers = get_headers(rest_fonts)
         text_nest = get_text_nest(seqs, starting_text_nest, pdf_headers)
