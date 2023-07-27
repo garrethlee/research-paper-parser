@@ -4,7 +4,6 @@ import pandas as pd
 from section import Section
 
 
-### DIFF
 def get_sections(doc):
     main_section = Section("", 100)
 
@@ -62,7 +61,6 @@ def get_sections(doc):
     return main_section.children[-1].children[-1].children
 
 
-### DIFF
 def preprocess_sections(sections):
     add_new_section = False
 
@@ -95,7 +93,6 @@ def preprocess_sections(sections):
     return sections
 
 
-### SAME
 def make_sections_dataframe(doc):
     # Get sections
     sections = get_sections(doc)
@@ -119,7 +116,6 @@ def make_sections_dataframe(doc):
     return sections, sections_df
 
 
-### DIFF
 def make_references_dataframe(sections, sections_df):
     references_dictionary = {}
     references_text = sections[-1].print_contents()
@@ -159,7 +155,6 @@ def clean_in_text_citations(in_text_citations):
     ]
 
 
-### DIFF
 def text_preprocess_for_reference_matching(references_text):
     # START searching ONCE References tag found
     references_dirty = re.sub("\n", " ", references_text)
@@ -172,13 +167,11 @@ def text_preprocess_for_reference_matching(references_text):
     return references_clean
 
 
-### DIFF
 def get_in_text_citations(text):
     IN_TEXT_CITATION_REGEX = r"\([\w\s.,]+\s\d{3,4}\s?\)"
     return re.findall(IN_TEXT_CITATION_REGEX, text)
 
 
-### DIFF
 def process_citations(citation: str):
     # case 1: 2 authors
     if " and " in citation:
@@ -205,7 +198,6 @@ def process_citations(citation: str):
             return ([author.strip()], year.strip())
 
 
-### DIFF
 def find_citation_matches(author_year_pairs, full_references, data, location):
     for author_year_pair in author_year_pairs:
         authors, year = author_year_pair
@@ -226,7 +218,6 @@ def find_citation_matches(author_year_pairs, full_references, data, location):
     return data
 
 
-### SAME
 def convert_pdf_to_dataframes(path):
     """Returns (sections_df, references_df)"""
     sections, sections_df = make_sections_dataframe(path)
@@ -234,7 +225,6 @@ def convert_pdf_to_dataframes(path):
     return sections_df, references_df
 
 
-### SAME
 def sanitize_dataframe_for_download(df):
     for col in df.columns:
         if df[col].dtype == "object":

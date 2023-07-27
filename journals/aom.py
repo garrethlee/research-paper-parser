@@ -92,7 +92,7 @@ def get_headers(fonts):
     """
     try:
         # Try first available header size, then try second
-        for header in AOM_HEADER_SIZE[-1]:
+        for header in AOM_HEADER_SIZE:
             for key, val in fonts.items():
                 font, size = key
                 if size == header:

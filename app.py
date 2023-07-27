@@ -1,10 +1,10 @@
 import streamlit as st
 import fitz
-from config import *
 from journals import orgsci, annurev, aom, asq
 from loguru import logger
 import sys
 import traceback
+from config import *
 
 logger.add(sys.stdout, backtrace=True, diagnose=True)
 
@@ -28,7 +28,6 @@ journal = st.selectbox(
 )
 
 if journal == DEFAULT_OPTION:
-    # Upload the file!
     st.write("Upload the PDF file to get started")
 else:
     col1, col2 = st.columns([5, 1])
