@@ -1,10 +1,12 @@
-import fitz
 import re
-from loguru import logger
-import pandas as pd
-from section import Section
 import traceback
-from typing import List, Any, Tuple, Dict, Union
+from typing import Any, Dict, List, Tuple, Union
+
+import fitz
+import pandas as pd
+from loguru import logger
+
+from section import Section
 
 
 def get_sections(doc: fitz.Document) -> List:
