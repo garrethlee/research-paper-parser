@@ -1,10 +1,12 @@
-import streamlit as st
-import fitz
-from journals import orgsci, annurev, aom, asq
-from loguru import logger
 import sys
 import traceback
+
+import fitz
+import streamlit as st
+from loguru import logger
+
 from config import *
+from journals import annurev, aom, asq, orgsci
 
 logger.add(sys.stdout, backtrace=True, diagnose=True)
 
