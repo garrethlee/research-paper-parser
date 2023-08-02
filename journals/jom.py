@@ -114,6 +114,16 @@ def get_text_nest(seqs, starting_text_nest, pdf_headers):
 
 
 def find_earliest_uppercase_index(s):
+    """
+    Find the index of the earliest uppercase letter in a given string.
+
+    Parameters:
+    - s (str): The input string to search for uppercase letters.
+
+    Returns:
+    - int: The index of the earliest uppercase letter in the string.
+           If no uppercase letters are found, returns the length of the string.
+    """
     for i, char in enumerate(s):
         if char.isalpha() and char.upper() == char:
             return i
@@ -121,6 +131,15 @@ def find_earliest_uppercase_index(s):
 
 
 def get_sections(doc):
+    """
+    A function that takes in a document and returns the nested structure of its sections.
+
+    Parameters:
+        doc (Document): The input document.
+
+    Returns:
+        dict: The nested structure of the sections in the document.
+    """
     seqs, fonts = structure_doc_by_size_and_font(doc)
     pdf_headers = get_headers(fonts)
     text_nest = get_text_nest(seqs, {}, pdf_headers)
@@ -128,6 +147,18 @@ def get_sections(doc):
 
 
 def find_citation_matches(author_year_pairs, full_references, data, location):
+    """
+    Finds citation matches based on author-year pairs, full references, data, and location.
+
+    Parameters:
+        author_year_pairs (list): A list of tuples containing author names and publication years.
+        full_references (list): A list of full reference strings.
+        data (dict): A dictionary containing reference as key and a list of locations as value.
+        location (str): A string representing the location.
+
+    Returns:
+        dict: A dictionary containing reference as key and a list of locations as value.
+    """
     for author_year_pair in author_year_pairs:
         authors, year = author_year_pair
         for reference in full_references:
@@ -148,6 +179,15 @@ def find_citation_matches(author_year_pairs, full_references, data, location):
 
 
 def process_citations(citation_group: str):
+    """
+    Processes a group of citations and returns a list of processed results.
+
+    Parameters:
+    citation_group (str): The input string containing a group of citations separated by ';'.
+
+    Returns:
+    list: A list of tuples, where each tuple contains a list of author names and the corresponding year of the citation.
+    """
     citations = citation_group.split(";")
     results = []
     for citation in citations:
@@ -202,6 +242,15 @@ def process_citations(citation_group: str):
 
 
 def remove_prefix(citation):
+    """
+    Remove the prefix from a citation string.
+
+    Args:
+        citation (str): The citation string from which the prefix will be removed.
+
+    Returns:
+        str: The citation string without the prefix.
+    """
     is_parantheses = False
     for idx, char in enumerate(citation):
         if char == "." and citation[idx - 1].islower() and not is_parantheses:
@@ -214,8 +263,15 @@ def remove_prefix(citation):
 
 
 def text_preprocess_for_reference_matching(references_text):
-    import re
+    """
+    Preprocesses the given references text for reference matching.
 
+    Args:
+        references_text (str): The raw references text.
+
+    Returns:
+        list: A list of cleaned references matching the pattern [A-Z][\w,&\-’.ˇ()\s]+ \d{4}\.
+    """
     # START searching ONCE References tag found
     references_dirty = re.sub("\n", " ", references_text)
     references = " ".join(references_dirty.split())
@@ -236,6 +292,17 @@ def text_preprocess_for_reference_matching(references_text):
 
 
 def make_references_dataframe(text_nest, sections_df):
+    """
+    Generate a references dataframe based on a given text nest and sections dataframe.
+
+    Args:
+        text_nest (dict): A nested dictionary containing the text data, including the "References" section.
+        sections_df (pandas.DataFrame): A dataframe containing the sections data.
+
+    Returns:
+        pandas.DataFrame: A dataframe containing the references information.
+
+    """
     references_dictionary = {}
     references_clean = text_preprocess_for_reference_matching(text_nest["References"])
     for location, text in zip(sections_df.index[:-1], sections_df.values[:-1]):
@@ -263,6 +330,16 @@ def make_references_dataframe(text_nest, sections_df):
 
 
 def make_sections_dataframe(doc):
+    """
+    Generate a pandas DataFrame containing the sections of a document.
+
+    Parameters:
+    - doc: The document to extract sections from.
+
+    Returns:
+    - text_nest: A nested list of section texts.
+    - sections_df: A DataFrame containing the section texts, with the section names as the index and the texts as the columns.
+    """
     text_nest = get_sections(doc)
     sections_df = pd.DataFrame(text_nest, index=["text"]).T
     sections_df.name = doc.name
@@ -270,6 +347,15 @@ def make_sections_dataframe(doc):
 
 
 def get_in_text_citations(text):
+    """
+    Finds and returns all in-text citations in the given text.
+
+    Parameters:
+        text (str): The text to search for in-text citations.
+
+    Returns:
+        list: A list of strings representing the in-text citations found in the text.
+    """
     IN_PARANTHESES_CITATION_REGEX = r"\([&\w\p{L}\.\s,\-; ]+\s\d{3,4}(?::\s\d{1,4})?\)"
     AND_PATTERN = "\S+ & \S+ \(\d{3,4}\)"
     ONE_PATTERN = "[A-Z]\S+ \(\d{3,4}\)"
@@ -281,7 +367,16 @@ def get_in_text_citations(text):
 
 
 def convert_pdf_to_dataframes(doc):
-    """Returns (sections_df, references_df)"""
+    """
+    Convert a PDF document to dataframes.
+
+    Args:
+        doc (str): The path or file-like object of the PDF document.
+
+    Returns:
+        sections_df (pandas.DataFrame): A dataframe containing the sections of the document.
+        references_df (pandas.DataFrame): A dataframe containing the references in the document.
+    """
     sections, sections_df = make_sections_dataframe(doc)
     references_df = make_references_dataframe(sections, sections_df)
     return sections_df, references_df
