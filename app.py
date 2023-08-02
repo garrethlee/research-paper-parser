@@ -4,13 +4,23 @@ import traceback
 import fitz
 import streamlit as st
 from loguru import logger
+from journals import orgsci
 
-from config import *
+from config import JOURNALS, DEFAULT_OPTION, journal_map
 
 logger.add(sys.stdout, backtrace=True, diagnose=True)
 
 
 def set_converted_state(state):
+    """
+    Set the converted state.
+
+    Parameters:
+        state (bool): The state to be set.
+
+    Returns:
+        None
+    """
     if "convert_clicked" not in st.session_state:
         st.session_state["convert_clicked"] = False
     st.session_state["convert_clicked"] = state
@@ -43,7 +53,7 @@ else:
         st.text("")
         convert_button = st.button(
             "Convert",
-            disabled=pdf_file == None,
+            disabled=pdf_file is None,
             on_click=set_converted_state,
             args=[True],
         )
@@ -77,11 +87,11 @@ A: Yes, PDF data extraction tools may have limitations in handling complex PDF l
             sections_df, references_df = journal_map[journal](doc)
             st.session_state.convert_success = True
         except Exception as e:
-            newline = "\n\n"
+            NEWLINE = "\n\n"
             st.error(
                 "Whoops! There seems to be an error. Did you make sure that the journal selected matches the file you uploaded?\n\n\n"
                 + "============ \n\n\n"
-                + f"Traceback: {newline.join(traceback.format_exception(e))}"
+                + f"Traceback: {NEWLINE.join(traceback.format_exception(e))}"
             )
             logger.error(f"Exception found: {e.with_traceback(e.__traceback__)}")
             st.session_state.convert_success = False

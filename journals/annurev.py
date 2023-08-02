@@ -387,7 +387,7 @@ def convert_pdf_to_dataframes(doc):
         )
 
 
-def sanitize_dataframe_for_download(df):
+def sanitize_dataframe_for_download(dataframe):
     """
     Sanitizes a pandas DataFrame for download by replacing newline characters and
     double quotes in string columns.
@@ -399,13 +399,15 @@ def sanitize_dataframe_for_download(df):
         pandas.DataFrame: The sanitized DataFrame.
     """
     try:
-        for col in df.columns:
-            if df[col].dtype == "object":
+        for col in dataframe.columns:
+            if dataframe[col].dtype == "object":
                 try:
-                    df[col] = df[col].str.replace("\n", " ").str.replace('"', "'")
+                    dataframe[col] = (
+                        dataframe[col].str.replace("\n", " ").str.replace('"', "'")
+                    )
                 except AttributeError:
                     continue
-        return df
+        return dataframe
     except:
         logger.error(
             f"Error occurred in 'sanitize_dataframe_for_download': {traceback.format_exc()}"
