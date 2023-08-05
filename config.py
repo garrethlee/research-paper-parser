@@ -1,4 +1,4 @@
-from journals import annurev, aom, asq, orgsci, jom
+from journals import annurev, aom, asq, orgsci, jom, joap
 
 JOURNALS = [
     "",
@@ -7,9 +7,10 @@ JOURNALS = [
     "Academy of Management Journal (AOM)",
     "Administrative Science Quarterly (ASQ)",
     "Journal of Management",
+    "Journal of Applied Psychology",
 ]
 
-DEFAULT_OPTION, ORGSCI, ANNUREV_ORGPSYCH, AOM, ASQ, JOM = JOURNALS
+DEFAULT_OPTION, ORGSCI, ANNUREV_ORGPSYCH, AOM, ASQ, JOM, JOAP = JOURNALS
 
 journal_map = {
     ORGSCI: orgsci.convert_pdf_to_dataframes,
@@ -17,4 +18,5 @@ journal_map = {
     AOM: aom.convert_pdf_to_dataframes,
     ASQ: asq.convert_pdf_to_dataframes,
     JOM: jom.convert_pdf_to_dataframes,
+    JOAP: joap.convert_pdf_to_dataframes,
 }
