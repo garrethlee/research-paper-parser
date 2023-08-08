@@ -3,11 +3,12 @@ import traceback
 
 import fitz
 import pandas as pd
-from loguru import logger
 
 from section import Section
+from logging import log_traceback
 
 
+@log_traceback
 def get_sections(doc):
     """
     Extracts sections from the given PDF document.
@@ -63,6 +64,7 @@ def get_sections(doc):
     return main_section.children[-1].children[-1].children
 
 
+@log_traceback
 def make_sections_dataframe(path):
     """
     Generate a pandas DataFrame containing the sections and their corresponding content from a PDF document.
@@ -91,6 +93,7 @@ def make_sections_dataframe(path):
     return content_nest, sections_df
 
 
+@log_traceback
 def text_preprocess_for_reference_matching(references_text):
     references_dirty = re.sub("\n", " ", references_text)
     references = " ".join(references_dirty.split())
@@ -118,6 +121,7 @@ def text_preprocess_for_reference_matching(references_text):
     return references_clean
 
 
+@log_traceback
 def find_citation_matches(author_year_pairs, full_references, data, location):
     """
     Find citation matches in a list of author-year pairs and full references.
@@ -150,6 +154,7 @@ def find_citation_matches(author_year_pairs, full_references, data, location):
     return data
 
 
+@log_traceback
 def preprocess_sections(sections):
     """
     Preprocesses the sections list by removing all elements after the "REFERENCES" section.
@@ -165,6 +170,7 @@ def preprocess_sections(sections):
     return sections
 
 
+@log_traceback
 def find_citation_matches(author_year_pairs, full_references, data, location):
     """
     This function finds citation matches based on the given author-year pairs, full references, data, and location.
@@ -201,6 +207,7 @@ def find_citation_matches(author_year_pairs, full_references, data, location):
     return data
 
 
+@log_traceback
 def process_citations(citation_group: str):
     """
     Processes a group of citations and extracts relevant information.
@@ -270,6 +277,7 @@ def process_citations(citation_group: str):
     return results
 
 
+@log_traceback
 def remove_prefix(citation):
     """
     Generate a function comment for the given function body in a markdown code block with the correct language syntax.
@@ -291,6 +299,7 @@ def remove_prefix(citation):
     return citation
 
 
+@log_traceback
 def text_preprocess_for_reference_matching(references_text):
     """
     Preprocesses the given references text for reference matching.
@@ -320,6 +329,7 @@ def text_preprocess_for_reference_matching(references_text):
     return references_clean
 
 
+@log_traceback
 def make_references_dataframe(sections, sections_df):
     """
     Generate a dataframe of references from given sections and sections dataframe.
@@ -357,6 +367,7 @@ def make_references_dataframe(sections, sections_df):
     return references_df
 
 
+@log_traceback
 def get_in_text_citations(text):
     """
     Extracts in-text citations from a given text.
@@ -378,6 +389,7 @@ def get_in_text_citations(text):
     return re.findall(IN_TEXT_CITATION_REGEX, text)
 
 
+@log_traceback
 def clean_in_text_citations(in_text_citations):
     """
     Cleans the in-text citations in a list of citations.
@@ -412,6 +424,7 @@ def clean_in_text_citations(in_text_citations):
     return cleaned_citations
 
 
+@log_traceback
 def convert_pdf_to_dataframes(doc):
     """
     Converts a PDF document into pandas DataFrames.
