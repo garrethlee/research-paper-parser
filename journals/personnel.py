@@ -1,11 +1,8 @@
-import re
-import traceback
-
-import fitz
 import pandas as pd
+import regex as re
 
+from log import log_traceback
 from section import Section
-from logging import log_traceback
 
 
 @log_traceback
@@ -65,7 +62,7 @@ def get_sections(doc):
 
 
 @log_traceback
-def make_sections_dataframe(path):
+def make_sections_dataframe(doc):
     """
     Generate a pandas DataFrame containing the sections and their corresponding content from a PDF document.
 
@@ -78,8 +75,6 @@ def make_sections_dataframe(path):
         - sections_df (pd.DataFrame): A pandas DataFrame containing the section content as rows and a single column named "text".
           The index of the DataFrame is the section content and the name of the DataFrame is the name of the PDF document.
     """
-    doc = fitz.open(path)
-
     sections = get_sections(doc)
     sections = preprocess_sections(sections)
 
