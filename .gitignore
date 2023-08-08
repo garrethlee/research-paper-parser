@@ -33,5 +33,7 @@ secrets.yaml
 # .DS_Store
 .DS_Store
 
-# models for experiment
+# directories not essential for prod
 models
+notebooks
+data
