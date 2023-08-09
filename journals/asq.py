@@ -1,14 +1,15 @@
 import itertools
 import re
-import traceback
 
 import pandas as pd
-from loguru import logger
+
+from log import log_traceback
 
 ABSTRACT_KEY = ("AdvPSA35F", 10.0)
 HEADERS_KEY = ("AdvP2A83", 10.0)
 
 
+@log_traceback
 def make_sections_dataframe(doc):
     """
     Generate a dataframe with sections of text from a document.
@@ -18,22 +19,16 @@ def make_sections_dataframe(doc):
 
     Returns:
     - text_nest: A nested list of sections of text.
-    - sections_df: A dataframe with the sections of text, indexed by "text" and with the document name as the column name.
+    - sections_df: A dataframe with the sections of text, indexed by "text"
+                   and with the document name as the column name.
     """
-    try:
-        text_nest = get_sections(doc)
-        sections_df = pd.DataFrame(text_nest, index=["text"]).T
-        sections_df.columns = [doc.name]
-        return text_nest, sections_df
-    except Exception as e:
-        logger.error(
-            f"Error occurred in 'make_sections_dataframe': {traceback.format_exc()}"
-        )
-        raise Exception(
-            f"Error occurred in 'make_sections_dataframe': {traceback.format_exc()}"
-        )
+    text_nest = get_sections(doc)
+    sections_df = pd.DataFrame(text_nest, index=["text"]).T
+    sections_df.columns = [doc.name]
+    return text_nest, sections_df
 
 
+@log_traceback
 def find_citation_matches(author_year_pairs, full_references, data, location):
     """
     Find citation matches based on author-year pairs, full references, data, and location.
@@ -47,34 +42,26 @@ def find_citation_matches(author_year_pairs, full_references, data, location):
     Returns:
         - dict: The updated dictionary containing matched references and locations.
     """
-    try:
-        for author_year_pair in author_year_pairs:
-            authors, year = author_year_pair
-            for reference in full_references:
-                match = True
-                if year in reference:
-                    for author in authors:
-                        if author not in reference:
-                            match = False
-                    if match:
-                        dict_value = data.get(reference, [])
-                        if dict_value == []:
-                            data[reference] = []
-                        if location not in dict_value:
-                            data[reference] = data.get(reference, []) + [location]
-                else:
-                    continue
-        return data
-
-    except Exception as e:
-        logger.error(
-            f"Error occurred in 'find_citation_matches': {traceback.format_exc()}"
-        )
-        raise Exception(
-            f"Error occurred in 'find_citation_matches': {traceback.format_exc()}"
-        )
+    for author_year_pair in author_year_pairs:
+        authors, year = author_year_pair
+        for reference in full_references:
+            match = True
+            if year in reference:
+                for author in authors:
+                    if author not in reference:
+                        match = False
+                if match:
+                    dict_value = data.get(reference, [])
+                    if dict_value == []:
+                        data[reference] = []
+                    if location not in dict_value:
+                        data[reference] = data.get(reference, []) + [location]
+            else:
+                continue
+    return data
 
 
+@log_traceback
 def process_citations(citation_group: str):
     """
     Processes a citation group and returns a list of parsed citations.
@@ -90,50 +77,41 @@ def process_citations(citation_group: str):
     citations = citation_group.split(";")
     results = []
 
-    try:
-        for citation in citations:
-            try:
-                # case 1: multiple authors
-                if " and " in citation:
-                    names, year = citation.split(",")[:-1], citation.split(",")[-1]
-                    names = [
-                        name.strip()
-                        for name in names
-                        if name.strip() not in ("", "e.g.")
-                    ]
-                    names = [name.replace(" and ", ",") for name in names]
-                    results.append((names, year.strip()))
+    for citation in citations:
+        try:
+            # case 1: multiple authors
+            if " and " in citation:
+                names, year = citation.split(",")[:-1], citation.split(",")[-1]
+                names = [
+                    name.strip() for name in names if name.strip() not in ("", "e.g.")
+                ]
+                names = [name.replace(" and ", ",") for name in names]
+                results.append((names, year.strip()))
 
-                # case 2: et al
-                elif "et al." in citation:
-                    citation = citation.replace("et al.", "")
-                    names, year = citation.split(",")[:-1], citation.split(",")[-1]
-                    names = [name.strip() for name in names if name.strip() != ""]
-                    results.append((names, year.strip()))
+            # case 2: et al
+            elif "et al." in citation:
+                citation = citation.replace("et al.", "")
+                names, year = citation.split(",")[:-1], citation.split(",")[-1]
+                names = [name.strip() for name in names if name.strip() != ""]
+                results.append((names, year.strip()))
 
-                # case 3: 1 author
+            # case 3: 1 author
+            else:
+                if "(" in citation:
+                    author, year = citation.split()
+                    results.append(([author], year[1:-1]))
                 else:
-                    if "(" in citation:
-                        author, year = citation.split()
-                        results.append(([author], year[1:-1]))
-                    else:
-                        names, year = citation.split(",")[:-1], citation.split(",")[-1]
-                        results.append(([names[-2].strip()], names[-1].strip()))
+                    names, year = citation.split(
+                        ",")[:-1], citation.split(",")[-1]
+                    results.append(([names[-2].strip()], names[-1].strip()))
 
-            except:
-                results.append(([""], ""))
+        except:
+            results.append(([""], ""))
 
-        return results
-
-    except Exception as e:
-        logger.error(
-            f"Error occurred in 'find_citation_matches': {traceback.format_exc()}"
-        )
-        raise Exception(
-            f"Error occurred in 'find_citation_matches': {traceback.format_exc()}"
-        )
+    return results
 
 
+@log_traceback
 def remove_prefix(citation):
     """
     Removes the prefix from a citation string.
@@ -147,7 +125,7 @@ def remove_prefix(citation):
     is_parantheses = False
     for idx, char in enumerate(citation):
         if char == "." and citation[idx - 1].islower() and not is_parantheses:
-            return citation[idx + 2 :]
+            return citation[idx + 2:]
         if char == "(":
             is_parantheses = True
         if char == ")":
@@ -156,6 +134,7 @@ def remove_prefix(citation):
     return citation
 
 
+@log_traceback
 def text_preprocess_for_reference_matching(references_text):
     """
     Preprocesses the given references text for reference matching.
@@ -167,33 +146,26 @@ def text_preprocess_for_reference_matching(references_text):
         list: A list of cleaned references.
 
     """
-    try:
-        # START searching ONCE References tag found
-        references_dirty = re.sub("\n", " ", references_text)
-        references = " ".join(references_dirty.split())
-        pattern = "[A-Z][A-Za-z,\-’.ˇ() ]+ \d{4} "
-        references_clean = list(map(remove_prefix, re.findall(pattern, references)))
+    references_dirty = re.sub("\n", " ", references_text)
+    references = " ".join(references_dirty.split())
+    pattern = "[A-Z][A-Za-z,\-’.ˇ() ]+ \d{4} "
+    references_clean = list(
+        map(remove_prefix, re.findall(pattern, references)))
 
-        for idx, ref in enumerate(references_clean):
-            if idx == len(references_clean) - 1:
-                # All the way to the end
-                references_clean[idx] = references[references.find(ref) :]
-            else:
-                next_ref = references_clean[idx + 1]
-                references_clean[idx] = references[
-                    references.find(ref) : references.find(next_ref)
-                ]
+    for idx, ref in enumerate(references_clean):
+        if idx == len(references_clean) - 1:
+            # All the way to the end
+            references_clean[idx] = references[references.find(ref):]
+        else:
+            next_ref = references_clean[idx + 1]
+            references_clean[idx] = references[
+                references.find(ref): references.find(next_ref)
+            ]
 
-        return references_clean
-    except Exception as e:
-        logger.error(
-            f"Error occurred in 'text_preprocess_for_ref_matching': {traceback.format_exc()}"
-        )
-        raise Exception(
-            f"Error occurred in 'text_preprocess_for_ref_matching': {traceback.format_exc()}"
-        )
+    return references_clean
 
 
+@log_traceback
 def make_references_dataframe(text_nest, sections_df):
     """
     Generate a DataFrame containing references found in the given text nest and match them with the provided sections DataFrame.
@@ -206,44 +178,37 @@ def make_references_dataframe(text_nest, sections_df):
     - references_df (DataFrame): A pandas DataFrame containing the matched references.
 
     """
-    try:
-        references_dictionary = {}
-        references_clean = text_preprocess_for_reference_matching(
-            text_nest["REFERENCES"]
-        )
-        for location, text in zip(sections_df.index, sections_df.values):
-            in_text_citations = get_in_text_citations(text.item())
-            cleaned_in_text_citations = [
-                citation if citation[0] != "(" else citation[1:-1]
-                for citation in in_text_citations
-            ]
-            author_year_pairs_nested = [
-                process_citations(citation)
-                for citation in cleaned_in_text_citations
-                if citation is not None
-            ]
-            author_year_pairs = list(
-                itertools.chain.from_iterable(author_year_pairs_nested)
-            )
-
-            references_dictionary = find_citation_matches(
-                author_year_pairs, references_clean, references_dictionary, location
-            )
-
-        references_df = pd.DataFrame(
-            {k: [",".join(v)] for k, v in references_dictionary.items()},
-            index=["section"],
-        ).T.reset_index(names="reference")
-        return references_df
-    except:
-        logger.error(
-            f"Error occurred in 'make_references_dataframe': {traceback.format_exc()}"
-        )
-        raise Exception(
-            f"Error occurred in 'make_references_dataframe': {traceback.format_exc()}"
+    references_dictionary = {}
+    references_clean = text_preprocess_for_reference_matching(
+        text_nest["REFERENCES"])
+    for location, text in zip(sections_df.index, sections_df.values):
+        in_text_citations = get_in_text_citations(text.item())
+        cleaned_in_text_citations = [
+            citation if citation[0] != "(" else citation[1:-1]
+            for citation in in_text_citations
+        ]
+        author_year_pairs_nested = [
+            process_citations(citation)
+            for citation in cleaned_in_text_citations
+            if citation is not None
+        ]
+        author_year_pairs = list(
+            itertools.chain.from_iterable(author_year_pairs_nested)
         )
 
+        references_dictionary = find_citation_matches(
+            author_year_pairs, references_clean, references_dictionary, location
+        )
 
+    references_df = pd.DataFrame(
+        {k: [",".join(v)] for k, v in references_dictionary.items()},
+        index=["section"],
+    ).T.reset_index(names="reference")
+
+    return references_df
+
+
+@log_traceback
 def get_in_text_citations(text):
     """
     Extracts in-text citations from a given text.
@@ -273,6 +238,7 @@ def get_in_text_citations(text):
     return re.findall(IN_TEXT_CITATION_REGEX, text)
 
 
+@log_traceback
 def convert_pdf_to_dataframes(doc):
     """
     Converts a PDF document to two dataframes: `sections_df` and `references_df`.
@@ -289,6 +255,7 @@ def convert_pdf_to_dataframes(doc):
     return sections_df, references_df
 
 
+@log_traceback
 def structure_doc_by_size_and_font(doc):
     """
     Generate a sequence of text from a document based on the size and font of each line.
@@ -302,46 +269,39 @@ def structure_doc_by_size_and_font(doc):
             - sorted_rest_fonts (list): A list of tuples containing font and size as keys and the corresponding
               extracted text as values. The list is sorted in descending order based on the size of the font.
     """
-    try:
-        fonts = {}
-        seqs = []
-        prev_size, prev_font = 0, 0
-        for page in doc:
-            blocks = page.get_text("dict")["blocks"]
-            for block in blocks:
-                if "lines" in block:
-                    spans = block["lines"]
-                    for span in spans:
-                        data = span["spans"]
-                        for lines in data:
-                            cur_size = round(lines["size"], 2)
-                            cur_font = lines["font"].split("+")[0]
+    fonts = {}
+    seqs = []
+    prev_size, prev_font = 0, 0
+    for page in doc:
+        blocks = page.get_text("dict")["blocks"]
+        for block in blocks:
+            if "lines" in block:
+                spans = block["lines"]
+                for span in spans:
+                    data = span["spans"]
+                    for lines in data:
+                        cur_size = round(lines["size"], 2)
+                        cur_font = lines["font"].split("+")[0]
 
-                            key = (cur_font, cur_size)
+                        key = (cur_font, cur_size)
 
-                            if cur_size == prev_size and cur_font == prev_font:
-                                latest_item = fonts[key][-1]
-                                fonts[key][-1] = latest_item + " " + lines["text"]
-                                seqs[-1] = seqs[-1] + " " + lines["text"]
+                        if cur_size == prev_size and cur_font == prev_font:
+                            latest_item = fonts[key][-1]
+                            fonts[key][-1] = latest_item + " " + lines["text"]
+                            seqs[-1] = seqs[-1] + " " + lines["text"]
 
-                            else:
-                                fonts[key] = fonts.get(key, []) + [lines["text"]]
-                                seqs.append(lines["text"])
+                        else:
+                            fonts[key] = fonts.get(key, []) + [lines["text"]]
+                            seqs.append(lines["text"])
 
-                            prev_size = cur_size
-                            prev_font = cur_font
+                        prev_size = cur_size
+                        prev_font = cur_font
 
-        sorted_fonts = sorted(fonts.items(), key=lambda x: x[0][1], reverse=True)
-        return seqs, sorted_fonts
-    except:
-        logger.error(
-            f"Error occurred in 'structure_doc_by_size_and_font': {traceback.format_exc()}"
-        )
-        raise Exception(
-            f"Error occurred in 'structure_doc_by_size_and_font': {traceback.format_exc()}"
-        )
+    sorted_fonts = sorted(fonts.items(), key=lambda x: x[0][1], reverse=True)
+    return seqs, sorted_fonts
 
 
+@log_traceback
 def get_headers(fonts):
     """
     Get the headers from a list of fonts.
@@ -352,20 +312,17 @@ def get_headers(fonts):
     Returns:
     - list: The headers extracted from the fonts.
     """
-    try:
-        first_part = []
-        second_part = []
-        for key, val in fonts:
-            if key == ABSTRACT_KEY:
-                first_part = val
-            if key == HEADERS_KEY:
-                second_part = val
-        return first_part[:2] + second_part + first_part[2:]
-    except:
-        logger.error(f"Error occurred in 'get_headers': {traceback.format_exc()}")
-        raise Exception(f"Error occurred in 'get_headers': {traceback.format_exc()}")
+    first_part = []
+    second_part = []
+    for key, val in fonts:
+        if key == ABSTRACT_KEY:
+            first_part = val
+        if key == HEADERS_KEY:
+            second_part = val
+    return first_part[:2] + second_part + first_part[2:]
 
 
+@log_traceback
 def find_earliest_uppercase_index(s):
     """
     Finds the index of the earliest uppercase character in a given string.
@@ -374,7 +331,8 @@ def find_earliest_uppercase_index(s):
     - s (str): The input string.
 
     Returns:
-    - int: The index of the earliest uppercase character in the string, or the length of the string if no uppercase character is found.
+    - int: The index of the earliest uppercase character in the string,
+           or the length of the string if no uppercase character is found.
     """
     for i, char in enumerate(s):
         if char.isalpha() and char.upper() == char:
@@ -382,6 +340,7 @@ def find_earliest_uppercase_index(s):
     return len(s)
 
 
+@log_traceback
 def get_text_nest(seqs, starting_text_nest, pdf_headers):
     """
     Generates a text nest based on a sequence of values.
@@ -394,33 +353,28 @@ def get_text_nest(seqs, starting_text_nest, pdf_headers):
     Returns:
         dict: The updated text nest.
     """
-    try:
-        cur_header = "Other"
-        for sequence in seqs[1:]:
-            if sequence in pdf_headers:
-                starting_text_nest[sequence] = ""
-                cur_header = sequence
+    cur_header = "Other"
+    for sequence in seqs[1:]:
+        if sequence in pdf_headers:
+            starting_text_nest[sequence] = ""
+            cur_header = sequence
+        else:
+            if cur_header.startswith("Keyword"):
+                earliest_idx = find_earliest_uppercase_index(sequence)
+                keyword_part = sequence[:earliest_idx]
+                intro_part = sequence[earliest_idx:]
+                starting_text_nest[cur_header] = starting_text_nest.get(
+                    cur_header, "") + " " + keyword_part
+                cur_header = "Introduction"
+                starting_text_nest[cur_header] += " " + intro_part
             else:
-                if cur_header.startswith("Keyword"):
-                    earliest_idx = find_earliest_uppercase_index(sequence)
-                    keyword_part = sequence[:earliest_idx]
-                    intro_part = sequence[earliest_idx:]
-                    starting_text_nest[cur_header] = (
-                        starting_text_nest.get(cur_header, "") + " " + keyword_part
-                    )
-                    cur_header = "Introduction"
-                    starting_text_nest[cur_header] += " " + intro_part
-                else:
-                    starting_text_nest[cur_header] = (
-                        starting_text_nest.get(cur_header, "") + " " + sequence
-                    )
+                starting_text_nest[cur_header] = starting_text_nest.get(
+                    cur_header, "") + " " + sequence
 
-        return starting_text_nest
-    except:
-        logger.error(f"Error occurred in 'get_text_nest': {traceback.format_exc()}")
-        raise Exception(f"Error occurred in 'get_text_nest': {traceback.format_exc()}")
+    return starting_text_nest
 
 
+@log_traceback
 def get_sections(doc):
     """
     Generates a nested structure of text sections from a given document.
@@ -431,16 +385,13 @@ def get_sections(doc):
     Returns:
     - text_nest (NestedStructure): The nested structure of text sections.
     """
-    try:
-        seqs, fonts = structure_doc_by_size_and_font(doc)
-        pdf_headers = get_headers(fonts)
-        text_nest = get_text_nest(seqs, {}, pdf_headers)
-        return text_nest
-    except:
-        logger.error(f"Error occurred in 'get_sections': {traceback.format_exc()}")
-        raise Exception(f"Error occurred in 'get_sections': {traceback.format_exc()}")
+    seqs, fonts = structure_doc_by_size_and_font(doc)
+    pdf_headers = get_headers(fonts)
+    text_nest = get_text_nest(seqs, {}, pdf_headers)
+    return text_nest
 
 
+@log_traceback
 def make_sections_dataframe(doc):
     """
     Generate a DataFrame containing sections of text from a given document.
@@ -453,15 +404,7 @@ def make_sections_dataframe(doc):
             - text_nest (list): A nested list containing the sections of text.
             - sections_df (DataFrame): A DataFrame containing the sections of text, with the "text" column as the index and the document name as the name of the DataFrame.
     """
-    try:
-        text_nest = get_sections(doc)
-        sections_df = pd.DataFrame(text_nest, index=["text"]).T
-        sections_df.name = doc.name
-        return text_nest, sections_df
-    except:
-        logger.error(
-            f"Error occurred in 'make_sections_dataframe': {traceback.format_exc()}"
-        )
-        raise Exception(
-            f"Error occurred in 'make_sections_dataframe': {traceback.format_exc()}"
-        )
+    text_nest = get_sections(doc)
+    sections_df = pd.DataFrame(text_nest, index=["text"]).T
+    sections_df.name = doc.name
+    return text_nest, sections_df
