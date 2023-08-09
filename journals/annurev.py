@@ -1,7 +1,7 @@
 import re
+
 import fitz
 import pandas as pd
-
 
 from log import log_traceback
 from section import *
