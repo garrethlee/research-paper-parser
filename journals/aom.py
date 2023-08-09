@@ -5,6 +5,7 @@ from log import log_traceback
 
 AOM_HEADER_SIZE = (9.96, 10.0)
 
+
 @log_traceback
 def get_pre_sections(doc):
     """Extracts text spans, fonts, and sizes from a PDF document.
@@ -52,9 +53,7 @@ def get_pre_sections(doc):
                                 first_page_fonts[key] = first_page_fonts.get(
                                     key, []
                                 ) + [lines["text"]]
-                            rest_fonts[key] = rest_fonts.get(key, []) + [
-                                lines["text"]
-                            ]
+                            rest_fonts[key] = rest_fonts.get(key, []) + [lines["text"]]
                             seqs.append(lines["text"])
 
                         prev_size = cur_size
@@ -68,6 +67,7 @@ def get_pre_sections(doc):
     )
     return seqs, sorted_first_page_fonts, sorted_rest_fonts
 
+
 @log_traceback
 def get_headers(fonts):
     """Extracts AOM-standard headers from the given fonts dictionary.
@@ -78,7 +78,7 @@ def get_headers(fonts):
     Returns:
         list or None: A list of text spans with the size equal to AOM-standard headers,
             or None if no such headers are found.
-    """  
+    """
     # Try first available header size, then try second
     for header in AOM_HEADER_SIZE:
         for key, val in fonts.items():
@@ -86,6 +86,7 @@ def get_headers(fonts):
             if size == header:
                 return val[1:]  # Skipping the first item as it is often empty.
     return []
+
 
 @log_traceback
 def get_abstract(first_page_fonts):
@@ -108,6 +109,7 @@ def get_abstract(first_page_fonts):
                 return {"Abstract": list(dict_items)[idx - 1][1][0]}
 
     return first_page_fonts
+
 
 @log_traceback
 def get_text_nest(seqs, starting_text_nest, pdf_headers):
@@ -132,6 +134,7 @@ def get_text_nest(seqs, starting_text_nest, pdf_headers):
             )
     return starting_text_nest
 
+
 @log_traceback
 def get_sections(doc):
     """Extracts sections from the PDF document.
@@ -147,6 +150,7 @@ def get_sections(doc):
     pdf_headers = get_headers(rest_fonts)
     text_nest = get_text_nest(seqs, starting_text_nest, pdf_headers)
     return text_nest
+
 
 @log_traceback
 def make_sections_dataframe(doc):
@@ -164,6 +168,7 @@ def make_sections_dataframe(doc):
     sections_df = pd.DataFrame(text_nest, index=["text"]).T
     sections_df.name = doc.name
     return text_nest, sections_df
+
 
 @log_traceback
 def find_citation_matches(author_year_pairs, full_references, data, location):
@@ -196,6 +201,7 @@ def find_citation_matches(author_year_pairs, full_references, data, location):
                 continue
     return data
 
+
 @log_traceback
 def process_citations(citation_group: str):
     """Processes citation groups and extracts author-year pairs.
@@ -209,7 +215,7 @@ def process_citations(citation_group: str):
     results = []
     citations = citation_group.split(";")
     for citation in citations:
-            
+        try:
             # case 1: &
             if "&" in citation:
                 tokens = citation.split(",")
@@ -234,11 +240,7 @@ def process_citations(citation_group: str):
                 tokens = citation.split(",")
                 results.append(
                     (
-                        [
-                            token.strip()
-                            for token in tokens[:-1]
-                            if token.strip() != ""
-                        ],
+                        [token.strip() for token in tokens[:-1] if token.strip() != ""],
                         tokens[-1].strip(),
                     )
                 )
@@ -250,15 +252,14 @@ def process_citations(citation_group: str):
                     results.append(([author], year[1:-1]))
                 else:
                     citation_split = citation.split(",")
-                    results.append(
-                        ([citation_split[-2]], citation_split[-1].strip())
-                    )
+                    results.append(([citation_split[-2]], citation_split[-1].strip()))
 
         except Exception as e:
             # If any error occurs during citation processing, add an empty entry.
             results.append(([""], ""))
 
         return results
+
 
 @log_traceback
 def text_preprocess_for_reference_matching(references_text):
@@ -287,6 +288,7 @@ def text_preprocess_for_reference_matching(references_text):
 
     return references_clean
 
+
 @log_traceback
 def make_references_dataframe(text_nest, sections_df):
     """Creates a DataFrame containing references and their corresponding sections.
@@ -308,7 +310,7 @@ def make_references_dataframe(text_nest, sections_df):
         references_clean = text_preprocess_for_reference_matching(
             list(text_nest.values())[-1]
         )
-     
+
     for location, text in zip(sections_df.index, sections_df.values):
         if location != "REFERENCES":
             in_text_citations = get_in_text_citations(text.item())
@@ -336,6 +338,7 @@ def make_references_dataframe(text_nest, sections_df):
 
     return references_df
 
+
 @log_traceback
 def get_in_text_citations(text):
     """Extracts in-text citations from the given text.
@@ -350,8 +353,11 @@ def get_in_text_citations(text):
     AND_PATTERN = "\S+ & \S+ \(\d{3,4}\)"
     ONE_PATTERN = "[A-Z]\S+ \(\d{3,4}\)"
     ET_AL_PATTERN = "[A-Z][a-z] et al. \(\d{3,4}\)"
-    IN_TEXT_CITATION_REGEX = f"{IN_PARANTHESES_CITATION_REGEX}|{AND_PATTERN}|{ONE_PATTERN}|{ET_AL_PATTERN}"
+    IN_TEXT_CITATION_REGEX = (
+        f"{IN_PARANTHESES_CITATION_REGEX}|{AND_PATTERN}|{ONE_PATTERN}|{ET_AL_PATTERN}"
+    )
     return re.findall(IN_TEXT_CITATION_REGEX, text)
+
 
 @log_traceback
 def convert_pdf_to_dataframes(doc):
