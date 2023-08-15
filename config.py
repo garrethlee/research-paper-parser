@@ -1,7 +1,7 @@
 from journals import annurev, aom, asq, orgsci, jom, joap, personnel
 
 APP_DESCRIPTION = (
-    "A program that takes in management academic research PDF files"
+    "A program that takes in management academic research PDF files "
     "from certain journals, analyzes them, and outputs two CSV files. "
     "One CSV file should dissect the research papers into sections, and "
     "the other CSV file should provide all references within the paper and "
