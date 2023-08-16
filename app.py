@@ -4,26 +4,15 @@ import traceback
 import fitz
 import streamlit as st
 from loguru import logger
-from journals import orgsci
 
-from config import JOURNALS, DEFAULT_OPTION, journal_map, APP_DESCRIPTION, FAQ
+from config import *
+from helpers import *
+from journals import orgsci
 
 logger.add(sys.stdout, backtrace=True, diagnose=True)
 
-
-def set_converted_state(state):
-    """
-    Set the converted state.
-
-    Parameters:
-        state (bool): The state to be set.
-
-    Returns:
-        None
-    """
-    if "convert_clicked" not in st.session_state:
-        st.session_state["convert_clicked"] = False
-    st.session_state["convert_clicked"] = state
+if "convert_clicked" not in st.session_state:
+    st.session_state["convert_clicked"] = False
 
 
 st.title("Research Paper Parser 📄")
@@ -33,66 +22,80 @@ with st.expander("Frequently Asked Questions ﹖"):
     st.write(FAQ)
 
 
-journal = st.selectbox(
-    label="Select Journal",
-    options=JOURNALS,
-    on_change=set_converted_state,
-    args=[False],
+pdf_files = st.file_uploader(
+    "Upload the paper's PDF", accept_multiple_files=True, on_change=set_converted_state, args=(False,)
 )
 
-if journal == DEFAULT_OPTION:
-    st.write("Upload the PDF file to get started")
-else:
-    col1, col2 = st.columns([5, 1])
-    with col1:
-        pdf_file = st.file_uploader(
-            "Upload the paper's PDF", on_change=set_converted_state, args=[False]
+uploaded_pdf_dataframe = create_pdf_dataframe(pdf_files)
+uploaded_pdf_editor = st.data_editor(
+    uploaded_pdf_dataframe,
+    column_config={
+        "Filename": st.column_config.Column(
+            "Filename",
+            help="Name of PDF file",
+            disabled=True,
+        ),
+        "Journal": st.column_config.SelectboxColumn(
+            "Journal",
+            help="The journal the article belongs to",
+            required=True,
+            width="large",
+            options=JOURNALS
         )
-    with col2:
-        # ADD PADDING
-        st.text("")
-        st.text("")
-        st.text("")
-        convert_button = st.button(
-            "Convert",
-            disabled=pdf_file is None,
-            on_click=set_converted_state,
-            args=[True],
-        )
-    st.write("---")
-    st.header("Results")
+    }, key="pdf_editor", hide_index=True, on_change=save_editor_changes)
 
-    if st.session_state["convert_clicked"] and pdf_file:
+
+convert_button = st.button(
+    "⚙️ Convert",
+    disabled=(not all(uploaded_pdf_editor.get(
+        "Journal", [None]))) or len(pdf_files) == 0,
+    on_click=set_converted_state, args=(True,)
+
+)
+
+st.write("---")
+st.header("Results")
+
+# Show results if either:
+#   1. convert button is clicked
+#   2. "convert_clicked" state is still True (False when we upload new files)
+if convert_button or st.session_state["convert_clicked"]:
+    uploaded_pdfs = uploaded_pdf_editor.to_dict(orient="records")
+    for pdf_info, pdf_file in zip(uploaded_pdfs, pdf_files):
+        journal = pdf_info['Journal']
         pdf_file_contents = pdf_file.getvalue()
         doc = fitz.open("pdf", pdf_file_contents)
         try:
             sections_df, references_df = journal_map[journal](doc)
-            st.session_state.convert_success = True
+            # Success in expander
+            with st.expander(f"✅{pdf_file.name}"):
+                st.subheader("Sections")
+                sections_display = st.dataframe(sections_df)
+                sections_download_button = st.download_button(
+                    label="Download",
+                    data=orgsci.sanitize_dataframe_for_download(
+                        sections_df).to_csv(),
+                    file_name=f"{doc.name}_sections.csv",
+                )
+                st.subheader("References")
+                references_display = st.dataframe(references_df)
+                references_download_button = st.download_button(
+                    label="Download",
+                    data=orgsci.sanitize_dataframe_for_download(
+                        references_df).to_csv(),
+                    file_name=f"{doc.name}_references.csv",
+                )
         except Exception as e:
-            NEWLINE = "\n\n"
-            st.error(
-                "Whoops! There seems to be an error. Did you make sure that the journal selected matches the file you uploaded?\n\n\n"
-                + "============ \n\n\n"
-                + f"Traceback: {NEWLINE.join(traceback.format_exception(e))}"
-            )
-            logger.error(f"Exception found: {e.with_traceback(e.__traceback__)}")
-            st.session_state.convert_success = False
-
-        if st.session_state.convert_success:
-            st.header("Sections")
-            sections_display = st.dataframe(sections_df)
-            sections_download_button = st.download_button(
-                label="Download",
-                data=orgsci.sanitize_dataframe_for_download(sections_df).to_csv(),
-                file_name=f"{doc.name}_sections.csv",
-            )
-            st.header("References")
-            references_display = st.dataframe(references_df)
-            references_download_button = st.download_button(
-                label="Download",
-                data=orgsci.sanitize_dataframe_for_download(references_df).to_csv(),
-                file_name=f"{doc.name}_references.csv",
-            )
+            # Error in expander
+            with st.expander(f"⚠️{pdf_file.name}"):
+                NEWLINE = "\n\n"
+                st.error(
+                    "Whoops! There seems to be an error. Did you make sure that the journal selected matches the file you uploaded?\n\n\n"
+                    + "============ \n\n\n"
+                    + f"Traceback: {NEWLINE.join(traceback.format_exception(e))}"
+                )
+                logger.error(
+                    f"Exception found: {e.with_traceback(e.__traceback__)}")
 
 
 st.markdown("---")
