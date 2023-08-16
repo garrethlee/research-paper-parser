@@ -4,10 +4,9 @@ import traceback
 import fitz
 import streamlit as st
 from loguru import logger
-from journals import orgsci
-from types import NoneType
 
 from config import *
+from journals import orgsci
 
 logger.add(sys.stdout, backtrace=True, diagnose=True)
 
