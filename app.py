@@ -11,6 +11,12 @@ from journals import orgsci
 logger.add(sys.stdout, backtrace=True, diagnose=True)
 
 
+def set_converted_state(state):
+    if "convert_clicked" not in st.session_state:
+        st.session_state["convert_clicked"] = False
+    st.session_state["convert_clicked"] = state
+
+
 def save_editor_changes():
     pdf_dataframe = st.session_state["pdf_dataframe"]
     updates = st.session_state["pdf_editor"]["edited_rows"]
@@ -86,45 +92,49 @@ convert_button = st.button(
     "⚙️ Convert",
     disabled=(not all(uploaded_pdf_editor.get(
         "Journal", [None]))) or len(pdf_files) == 0,
+    on_click=set_converted_state, args=(True,)
 
 )
 
 st.write("---")
 st.header("Results")
 
-if convert_button:
-    pdf_file_contents = pdf_files.getvalue()
-    doc = fitz.open("pdf", pdf_file_contents)
-    try:
-        sections_df, references_df = journal_map[journal](doc)
-        st.session_state.convert_success = True
-    except Exception as e:
-        NEWLINE = "\n\n"
-        st.error(
-            "Whoops! There seems to be an error. Did you make sure that the journal selected matches the file you uploaded?\n\n\n"
-            + "============ \n\n\n"
-            + f"Traceback: {NEWLINE.join(traceback.format_exception(e))}"
-        )
-        logger.error(
-            f"Exception found: {e.with_traceback(e.__traceback__)}")
+if convert_button or st.session_state["convert_clicked"]:
+    uploaded_pdfs = uploaded_pdf_editor.to_dict(orient="records")
+    for pdf_info, pdf_file in zip(uploaded_pdfs, pdf_files):
+        journal = pdf_info['Journal']
+        pdf_file_contents = pdf_file.getvalue()
+        doc = fitz.open("pdf", pdf_file_contents)
+        try:
+            sections_df, references_df = journal_map[journal](doc)
+            st.session_state.convert_success = True
+        except Exception as e:
+            NEWLINE = "\n\n"
+            st.error(
+                "Whoops! There seems to be an error. Did you make sure that the journal selected matches the file you uploaded?\n\n\n"
+                + "============ \n\n\n"
+                + f"Traceback: {NEWLINE.join(traceback.format_exception(e))}"
+            )
+            logger.error(
+                f"Exception found: {e.with_traceback(e.__traceback__)}")
 
-    if st.session_state.convert_success:
-        st.header("Sections")
-        sections_display = st.dataframe(sections_df)
-        sections_download_button = st.download_button(
-            label="Download",
-            data=orgsci.sanitize_dataframe_for_download(
-                sections_df).to_csv(),
-            file_name=f"{doc.name}_sections.csv",
-        )
-        st.header("References")
-        references_display = st.dataframe(references_df)
-        references_download_button = st.download_button(
-            label="Download",
-            data=orgsci.sanitize_dataframe_for_download(
-                references_df).to_csv(),
-            file_name=f"{doc.name}_references.csv",
-        )
+        if st.session_state.convert_success:
+            st.header("Sections")
+            sections_display = st.dataframe(sections_df)
+            sections_download_button = st.download_button(
+                label="Download",
+                data=orgsci.sanitize_dataframe_for_download(
+                    sections_df).to_csv(),
+                file_name=f"{doc.name}_sections.csv",
+            )
+            st.header("References")
+            references_display = st.dataframe(references_df)
+            references_download_button = st.download_button(
+                label="Download",
+                data=orgsci.sanitize_dataframe_for_download(
+                    references_df).to_csv(),
+                file_name=f"{doc.name}_references.csv",
+            )
 
 
 st.markdown("---")
