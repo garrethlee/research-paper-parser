@@ -1,5 +1,7 @@
+import io
 import sys
 import traceback
+from zipfile import ZipFile
 
 import fitz
 import streamlit as st
