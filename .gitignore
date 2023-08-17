@@ -35,5 +35,3 @@ secrets.yaml
 
 # directories not essential for prod
 models
-notebooks
-data
