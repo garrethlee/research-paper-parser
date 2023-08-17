@@ -399,9 +399,8 @@ def sanitize_dataframe_for_download(df: Any) -> Any:
     for col in df.columns:
         if df[col].dtype == "object":
             try:
-                df[col] = df[col] \
-                    .str.replace("\n", " ") \
-                    .str.replace('"', "'")
+                df[col] = df[col].str.replace(
+                    "\n", " ").str.replace('"', "'")
             except AttributeError:
                 continue
     return df
