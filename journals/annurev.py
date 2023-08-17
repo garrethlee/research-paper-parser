@@ -1,7 +1,7 @@
 import re
+
 import fitz
 import pandas as pd
-
 
 from log import log_traceback
 from section import *
@@ -133,8 +133,7 @@ def make_references_dataframe(sections, sections_df):
         pd.DataFrame: DataFrame of references.
     """
     references_dictionary = {}
-    references_text = sections[sections.index(
-        "LITERATURE CITED")].print_contents()
+    references_text = sections[sections.index("LITERATURE CITED")].print_contents()
     references_clean = text_preprocess_for_reference_matching(references_text)
 
     for location, text in zip(sections_df.index[:-1], sections_df.values[:-1]):
@@ -199,11 +198,11 @@ def text_preprocess_for_reference_matching(references_text):
     for idx, ref in enumerate(references_clean):
         if idx == len(references_clean) - 1:
             # All the way to the end
-            references_clean[idx] = references[references.find(ref):]
+            references_clean[idx] = references[references.find(ref) :]
         else:
             next_ref = references_clean[idx + 1]
             references_clean[idx] = references[
-                references.find(ref): references.find(next_ref)
+                references.find(ref) : references.find(next_ref)
             ]
 
     return references_clean

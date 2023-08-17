@@ -33,5 +33,7 @@ secrets.yaml
 # .DS_Store
 .DS_Store
 
-# keep the notebooks and data
+# directories not essential for prod
 models
+notebooks
+data
