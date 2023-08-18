@@ -25,7 +25,10 @@ with st.expander("Frequently Asked Questions ﹖"):
 
 
 pdf_files = st.file_uploader(
-    "Upload the paper's PDF", accept_multiple_files=True, on_change=set_converted_state, args=(False,)
+    "Upload the paper's PDF",
+    accept_multiple_files=True,
+    on_change=set_converted_state,
+    args=(False,),
 )
 
 uploaded_pdf_dataframe = create_pdf_dataframe(pdf_files)
@@ -42,17 +45,21 @@ uploaded_pdf_editor = st.data_editor(
             help="The journal the article belongs to",
             required=True,
             width="large",
-            options=JOURNALS
-        )
-    }, key="pdf_editor", hide_index=True, on_change=save_editor_changes)
+            options=JOURNALS,
+        ),
+    },
+    key="pdf_editor",
+    hide_index=True,
+    on_change=save_editor_changes,
+)
 
 
 convert_button = st.button(
     "⚙️ Convert",
-    disabled=(not all(uploaded_pdf_editor.get(
-        "Journal", [None]))) or len(pdf_files) == 0,
-    on_click=set_converted_state, args=(True,)
-
+    disabled=(not all(uploaded_pdf_editor.get("Journal", [None])))
+    or len(pdf_files) == 0,
+    on_click=set_converted_state,
+    args=(True,),
 )
 
 st.write("---")
@@ -69,30 +76,32 @@ pdf_file_zip = ZipFile(zip_buffer, "w")
 if convert_button or st.session_state["convert_clicked"]:
     uploaded_pdfs = uploaded_pdf_editor.to_dict(orient="records")
     for pdf_info, pdf_file in zip(uploaded_pdfs, pdf_files):
-        journal = pdf_info['Journal']
+        journal = pdf_info["Journal"]
         pdf_file_contents = pdf_file.getvalue()
         doc = fitz.open("pdf", pdf_file_contents)
         try:
             sections_df, references_df = journal_map[journal](doc)
 
             # Add created_files to zip
-            with pdf_file_zip.open(f"{pdf_file.name[:-4]}_sections.csv", "w") as sections_csv:
-                orgsci.sanitize_dataframe_for_download(
-                    sections_df).to_csv(sections_csv)
-            with pdf_file_zip.open(f"{pdf_file.name[:-4]}_references.csv", "w") as references_csv:
-                orgsci.sanitize_dataframe_for_download(
-                    references_df).to_csv(references_csv)
+            with pdf_file_zip.open(
+                f"{pdf_file.name[:-4]}_sections.csv", "w"
+            ) as sections_csv:
+                orgsci.sanitize_dataframe_for_download(sections_df).to_csv(sections_csv)
+            with pdf_file_zip.open(
+                f"{pdf_file.name[:-4]}_references.csv", "w"
+            ) as references_csv:
+                orgsci.sanitize_dataframe_for_download(references_df).to_csv(
+                    references_csv
+                )
 
             # Success in expander
             with st.expander(f"✅{pdf_file.name}"):
-
                 st.subheader("Sections")
 
                 sections_display = st.dataframe(sections_df)
                 sections_download_button = st.download_button(
                     label="Download",
-                    data=orgsci.sanitize_dataframe_for_download(
-                        sections_df).to_csv(),
+                    data=orgsci.sanitize_dataframe_for_download(sections_df).to_csv(),
                     file_name=f"{doc.name}_sections.csv",
                 )
 
@@ -100,8 +109,7 @@ if convert_button or st.session_state["convert_clicked"]:
                 references_display = st.dataframe(references_df)
                 references_download_button = st.download_button(
                     label="Download",
-                    data=orgsci.sanitize_dataframe_for_download(
-                        references_df).to_csv(),
+                    data=orgsci.sanitize_dataframe_for_download(references_df).to_csv(),
                     file_name=f"{doc.name}_references.csv",
                 )
 
@@ -114,14 +122,17 @@ if convert_button or st.session_state["convert_clicked"]:
                     + "============ \n\n\n"
                     + f"Traceback: {NEWLINE.join(traceback.format_exception(e))}"
                 )
-                logger.error(
-                    f"Exception found: {e.with_traceback(e.__traceback__)}")
+                logger.error(f"Exception found: {e.with_traceback(e.__traceback__)}")
 
 # Close the zip file
 pdf_file_zip.close()
 
 download_all_button = st.download_button(
-    "Download All", data=zip_buffer.getvalue(), file_name="paper-sense-results.zip", mime="application/zip")
+    label="Download All",
+    data=zip_buffer.getvalue(),
+    file_name="paper-sense-results.zip",
+    mime="application/zip",
+)
 
 
 st.markdown("---")
