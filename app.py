@@ -65,6 +65,9 @@ convert_button = st.button(
 st.write("---")
 st.header("Results")
 
+zip_buffer = io.BytesIO()
+pdf_file_zip = ZipFile(zip_buffer, mode="w")
+
 # Show results if either:
 #   1. convert button is clicked
 #   2. "convert_clicked" state is still True (False when we upload new files)
@@ -88,7 +91,6 @@ if convert_button or st.session_state["convert_clicked"]:
                 orgsci.sanitize_dataframe_for_download(references_df).to_csv(
                     references_csv
                 )
-
 
             # Success in expander
             with st.expander(f"✅{pdf_file.name}"):
@@ -126,7 +128,6 @@ download_all_button = st.download_button(
     file_name="paper-sense-results.zip",
     mime="application/zip",
 )
-
 
 
 st.markdown("---")
