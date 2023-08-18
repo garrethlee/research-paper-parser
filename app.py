@@ -65,14 +65,9 @@ convert_button = st.button(
 st.write("---")
 st.header("Results")
 
-
-# Open zip file
-zip_buffer = io.BytesIO()
-pdf_file_zip = ZipFile(zip_buffer, "w")
-
 # Show results if either:
 #   1. convert button is clicked
-#   2. no new files are uploaded
+#   2. "convert_clicked" state is still True (False when we upload new files)
 if convert_button or st.session_state["convert_clicked"]:
     uploaded_pdfs = uploaded_pdf_editor.to_dict(orient="records")
     for pdf_info, pdf_file in zip(uploaded_pdfs, pdf_files):
@@ -94,17 +89,16 @@ if convert_button or st.session_state["convert_clicked"]:
                     references_csv
                 )
 
+
             # Success in expander
             with st.expander(f"✅{pdf_file.name}"):
                 st.subheader("Sections")
-
                 sections_display = st.dataframe(sections_df)
                 sections_download_button = st.download_button(
                     label="Download",
                     data=orgsci.sanitize_dataframe_for_download(sections_df).to_csv(),
                     file_name=f"{doc.name}_sections.csv",
                 )
-
                 st.subheader("References")
                 references_display = st.dataframe(references_df)
                 references_download_button = st.download_button(
@@ -112,7 +106,6 @@ if convert_button or st.session_state["convert_clicked"]:
                     data=orgsci.sanitize_dataframe_for_download(references_df).to_csv(),
                     file_name=f"{doc.name}_references.csv",
                 )
-
         except Exception as e:
             # Error in expander
             with st.expander(f"⚠️{pdf_file.name}"):
@@ -133,6 +126,7 @@ download_all_button = st.download_button(
     file_name="paper-sense-results.zip",
     mime="application/zip",
 )
+
 
 
 st.markdown("---")
