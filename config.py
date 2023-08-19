@@ -27,14 +27,15 @@ A: Yes, PDF data extraction tools may have limitations in handling complex PDF l
 
 JOURNALS = [
     "",
-    "OrgSci",
-    "Annurev-Orgpsych",
-    "Academy of Management Journal (AOM)",
-    "Administrative Science Quarterly (ASQ)",
+    "Orgsci",
+    "Annurev Orgpsych",
+    "Academy of Management Journal",
+    "Administrative Science Quarterly",
     "Journal of Management",
     "Journal of Applied Psychology",
     "Personnel Psychology",
 ]
+
 
 DEFAULT_OPTION, ORGSCI, ANNUREV_ORGPSYCH, AOM, ASQ, JOM, JOAP, PERSONNEL = JOURNALS
 

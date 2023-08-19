@@ -409,13 +409,14 @@ def clean_in_text_citations(in_text_citations):
             citation = citation.replace("’s", "")
         if citation.endswith(" )"):
             citation = citation[:-2]
-
         if citation.startswith("(see "):
             citation = citation[5:]
-        elif "e.g." in citation or "i.e." in citation:
-            citation = citation[7:]
+        if citation.startswith("( "):
+            citation = citation[2:]
         elif citation.startswith("("):
             citation = citation[1:]
+        if "e.g." in citation or "i.e." in citation:
+            citation = citation[8:]
         else:
             citation = citation
         cleaned_citations.append(citation)
