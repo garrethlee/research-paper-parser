@@ -106,11 +106,11 @@ def text_preprocess_for_reference_matching(references_text):
     for idx, ref in enumerate(references_clean):
         if idx == len(references_clean) - 1:
             # All the way to the end
-            references_clean[idx] = references[references.find(ref):]
+            references_clean[idx] = references[references.find(ref) :]
         else:
             next_ref = references_clean[idx + 1]
             references_clean[idx] = references[
-                references.find(ref): references.find(next_ref)
+                references.find(ref) : references.find(next_ref)
             ]
 
     return references_clean
@@ -161,7 +161,7 @@ def preprocess_sections(sections):
         list: The preprocessed sections list with all elements after the "REFERENCES" section removed.
     """
     references_section_index = sections.index("REFERENCES")
-    sections = sections[1: references_section_index + 1]
+    sections = sections[1 : references_section_index + 1]
     return sections
 
 
@@ -248,8 +248,7 @@ def process_citations(citation_group: str):
                 tokens = citation.split(",")
                 results.append(
                     (
-                        [token.strip()
-                         for token in tokens[:-1] if token.strip() != ""],
+                        [token.strip() for token in tokens[:-1] if token.strip() != ""],
                         tokens[-1].strip(),
                     )
                 )
@@ -258,8 +257,7 @@ def process_citations(citation_group: str):
             else:
                 if "(" in citation:
                     author, year = citation.split()
-                    results.append(
-                        ([author.split()[-1].strip()], year[1:-1].strip()))
+                    results.append(([author.split()[-1].strip()], year[1:-1].strip()))
                 else:
                     citation_split = citation.split(",")
                     results.append(
@@ -288,7 +286,7 @@ def remove_prefix(citation):
     is_parantheses = False
     for idx, char in enumerate(citation):
         if char == "." and citation[idx - 1].islower() and not is_parantheses:
-            return citation[idx + 2:]
+            return citation[idx + 2 :]
         if char == "(":
             is_parantheses = True
         if char == ")":
@@ -316,11 +314,11 @@ def text_preprocess_for_reference_matching(references_text):
     references_clean = re.findall(pattern, references)
     for idx, ref in enumerate(references_clean):
         if idx == len(references_clean) - 1:
-            references_clean[idx] = references[references.find(ref):]
+            references_clean[idx] = references[references.find(ref) :]
         else:
             next_ref = references_clean[idx + 1]
             references_clean[idx] = references[
-                references.find(ref): references.find(next_ref)
+                references.find(ref) : references.find(next_ref)
             ]
 
     return references_clean
@@ -340,14 +338,17 @@ def make_references_dataframe(sections, sections_df):
 
     """
     references_dictionary = {}
+
     references_text = sections["REFERENCES"][0]
     references_clean = text_preprocess_for_reference_matching(references_text)
     for location, text in zip(sections_df.index, sections_df.values):
         in_text_citations = get_in_text_citations(text.item())
+        # clean
         cleaned_in_text_citations = clean_in_text_citations(in_text_citations)
         processed_citations = [
             process_citations(citation) for citation in cleaned_in_text_citations
         ]
+        # format
         author_year_pairs = list(
             filter(
                 lambda x: x is not None,

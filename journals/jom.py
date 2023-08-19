@@ -38,22 +38,17 @@ def structure_doc_by_size_and_font(doc):
                         if cur_size == prev_size and cur_font == prev_font:
                             latest_item = rest_fonts[key][-1]
 
-                            rest_fonts[key][-1] = latest_item + \
-                                " " + lines["text"]
+                            rest_fonts[key][-1] = latest_item + " " + lines["text"]
                             seqs[-1] = seqs[-1] + " " + lines["text"]
 
                         else:
-                            rest_fonts[key] = rest_fonts.get(key, []) + [
-                                lines["text"]
-                            ]
+                            rest_fonts[key] = rest_fonts.get(key, []) + [lines["text"]]
                             seqs.append(lines["text"])
 
                         prev_size = cur_size
                         prev_font = cur_font
 
-    sorted_fonts = dict(
-        sorted(rest_fonts.items(), key=lambda x: x[0], reverse=True)
-    )
+    sorted_fonts = dict(sorted(rest_fonts.items(), key=lambda x: x[0], reverse=True))
     return seqs, sorted_fonts
 
 
@@ -96,8 +91,7 @@ def get_text_nest(seqs, starting_text_nest, pdf_headers):
             if sequence.startswith("Acknowledgments"):
                 cur_header = "Abstract"
                 starting_text_nest[cur_header] = (
-                    starting_text_nest.get(
-                        cur_header, "") + " " + prev_sequence
+                    starting_text_nest.get(cur_header, "") + " " + prev_sequence
                 )
             elif prev_sequence.startswith("Keywords"):
                 cur_header = "Keywords"
@@ -105,13 +99,11 @@ def get_text_nest(seqs, starting_text_nest, pdf_headers):
                 keyword_part = sequence[:earliest_idx]
                 abstract_part = sequence[earliest_idx:]
                 starting_text_nest[cur_header] = (
-                    starting_text_nest.get(
-                        cur_header, "") + " " + keyword_part
+                    starting_text_nest.get(cur_header, "") + " " + keyword_part
                 )
                 cur_header = "Abstract"
                 starting_text_nest[cur_header] = (
-                    starting_text_nest.get(
-                        cur_header, "") + " " + abstract_part
+                    starting_text_nest.get(cur_header, "") + " " + abstract_part
                 )
                 cur_header = "Intro"
             else:
@@ -186,8 +178,7 @@ def find_citation_matches(author_year_pairs, full_references, data, location):
                     if dict_value == []:
                         data[reference] = []
                     if location not in dict_value:
-                        data[reference] = data.get(
-                            reference, []) + [location]
+                        data[reference] = data.get(reference, []) + [location]
             else:
                 continue
     return data
@@ -233,11 +224,7 @@ def process_citations(citation_group: str):
                 tokens = citation.split(",")
                 results.append(
                     (
-                        [
-                            token.strip()
-                            for token in tokens[:-1]
-                            if token.strip() != ""
-                        ],
+                        [token.strip() for token in tokens[:-1] if token.strip() != ""],
                         tokens[-1].strip(),
                     )
                 )
@@ -275,7 +262,7 @@ def remove_prefix(citation):
     is_parantheses = False
     for idx, char in enumerate(citation):
         if char == "." and citation[idx - 1].islower() and not is_parantheses:
-            return citation[idx + 2:]
+            return citation[idx + 2 :]
         if char == "(":
             is_parantheses = True
         if char == ")":
@@ -302,11 +289,11 @@ def text_preprocess_for_reference_matching(references_text):
     for idx, ref in enumerate(references_clean):
         if idx == len(references_clean) - 1:
             # All the way to the end
-            references_clean[idx] = references[references.find(ref):]
+            references_clean[idx] = references[references.find(ref) :]
         else:
             next_ref = references_clean[idx + 1]
             references_clean[idx] = references[
-                references.find(ref): references.find(next_ref)
+                references.find(ref) : references.find(next_ref)
             ]
 
     return references_clean
@@ -326,9 +313,7 @@ def make_references_dataframe(text_nest, sections_df):
 
     """
     references_dictionary = {}
-    references_clean = text_preprocess_for_reference_matching(
-        text_nest["References"]
-    )
+    references_clean = text_preprocess_for_reference_matching(text_nest["References"])
     for location, text in zip(sections_df.index[:-1], sections_df.values[:-1]):
         in_text_citations = get_in_text_citations(text.item())
         cleaned_in_text_citations = [
@@ -384,13 +369,13 @@ def get_in_text_citations(text):
     Returns:
         list: A list of strings representing the in-text citations found in the text.
     """
-    IN_PARANTHESES_CITATION_REGEX = (
-        r"\([&\w\p{L}\.\s,\-; ]+\s\d{3,4}(?::\s\d{1,4})?\)"
-    )
+    IN_PARANTHESES_CITATION_REGEX = r"\([&\w\p{L}\.\s,\-; ]+\s\d{3,4}(?::\s\d{1,4})?\)"
     AND_PATTERN = "\S+ & \S+ \(\d{3,4}\)"
     ONE_PATTERN = "[A-Z]\S+ \(\d{3,4}\)"
     ET_AL_PATTERN = "[A-Z][a-z] et al. \(\d{3,4}\)"
-    IN_TEXT_CITATION_REGEX = f"{IN_PARANTHESES_CITATION_REGEX}|{AND_PATTERN}|{ONE_PATTERN}|{ET_AL_PATTERN}"
+    IN_TEXT_CITATION_REGEX = (
+        f"{IN_PARANTHESES_CITATION_REGEX}|{AND_PATTERN}|{ONE_PATTERN}|{ET_AL_PATTERN}"
+    )
     return re.findall(IN_TEXT_CITATION_REGEX, text)
 
 
