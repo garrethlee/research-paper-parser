@@ -101,8 +101,7 @@ def process_citations(citation_group: str):
                     author, year = citation.split()
                     results.append(([author], year[1:-1]))
                 else:
-                    names, year = citation.split(
-                        ",")[:-1], citation.split(",")[-1]
+                    names, year = citation.split(",")[:-1], citation.split(",")[-1]
                     results.append(([names[-2].strip()], names[-1].strip()))
 
         except:
@@ -125,7 +124,7 @@ def remove_prefix(citation):
     is_parantheses = False
     for idx, char in enumerate(citation):
         if char == "." and citation[idx - 1].islower() and not is_parantheses:
-            return citation[idx + 2:]
+            return citation[idx + 2 :]
         if char == "(":
             is_parantheses = True
         if char == ")":
@@ -149,17 +148,16 @@ def text_preprocess_for_reference_matching(references_text):
     references_dirty = re.sub("\n", " ", references_text)
     references = " ".join(references_dirty.split())
     pattern = "[A-Z][A-Za-z,\-’.ˇ() ]+ \d{4} "
-    references_clean = list(
-        map(remove_prefix, re.findall(pattern, references)))
+    references_clean = list(map(remove_prefix, re.findall(pattern, references)))
 
     for idx, ref in enumerate(references_clean):
         if idx == len(references_clean) - 1:
             # All the way to the end
-            references_clean[idx] = references[references.find(ref):]
+            references_clean[idx] = references[references.find(ref) :]
         else:
             next_ref = references_clean[idx + 1]
             references_clean[idx] = references[
-                references.find(ref): references.find(next_ref)
+                references.find(ref) : references.find(next_ref)
             ]
 
     return references_clean
@@ -179,8 +177,7 @@ def make_references_dataframe(text_nest, sections_df):
 
     """
     references_dictionary = {}
-    references_clean = text_preprocess_for_reference_matching(
-        text_nest["REFERENCES"])
+    references_clean = text_preprocess_for_reference_matching(text_nest["REFERENCES"])
     for location, text in zip(sections_df.index, sections_df.values):
         in_text_citations = get_in_text_citations(text.item())
         cleaned_in_text_citations = [
@@ -363,13 +360,17 @@ def get_text_nest(seqs, starting_text_nest, pdf_headers):
                 earliest_idx = find_earliest_uppercase_index(sequence)
                 keyword_part = sequence[:earliest_idx]
                 intro_part = sequence[earliest_idx:]
-                starting_text_nest[cur_header] = starting_text_nest.get(
-                    cur_header, "") + " " + keyword_part
+                starting_text_nest[cur_header] = (
+                    starting_text_nest.get(cur_header, "") + " " + keyword_part
+                )
                 cur_header = "Introduction"
-                starting_text_nest[cur_header] += " " + intro_part
+                starting_text_nest[cur_header] = (
+                    starting_text_nest.get(cur_header, " ") + " " + intro_part
+                )
             else:
-                starting_text_nest[cur_header] = starting_text_nest.get(
-                    cur_header, "") + " " + sequence
+                starting_text_nest[cur_header] = (
+                    starting_text_nest.get(cur_header, "") + " " + sequence
+                )
 
     return starting_text_nest
 
